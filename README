@@ -1,0 +1,103 @@
+#README
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+
+np.random.seed(42)
+data = pd.DataFrame({
+    'Production_Output': np.random.normal(500, 50, 1000),   # Production output in units
+    'Defect_Rate': np.random.uniform(0, 0.05, 1000),        # Defect rate percentage
+    'Machine_Downtime': np.random.normal(5, 2, 1000),       # Downtime in hours
+    'Maintenance_Schedule': np.random.randint(1, 31, 1000), # Maintenance day of the month
+    'Employee_Training_Hours': np.random.normal(10, 2, 1000) # Training hours per month
+})
+
+# Create a target variable ( Production Output for next month)
+data['Next_Month_Production'] = data['Production_Output'] * (1 - data['Defect_Rate']) * (1 - (data['Machine_Downtime'] / 100))
+
+# Split the data into training and testing sets
+X = data[['Production_Output', 'Defect_Rate', 'Machine_Downtime', 'Maintenance_Schedule', 'Employee_Training_Hours']]
+y = data['Next_Month_Production']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Create and train the model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Make predictions
+y_pred = model.predict(X_test)
+
+# Calculate the mean squared error
+mse = mean_squared_error(y_test, y_pred)
+print(f'Mean Squared Error: {mse}')
+
+# Plot the actual vs. predicted production output
+plt.figure(figsize=(10, 6))
+plt.scatter(y_test, y_pred, alpha=0.7)
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'k--', lw=3)
+plt.xlabel('Actual Production Output')
+plt.ylabel('Predicted Production Output')
+plt.title('Actual vs Predicted Production Output')
+plt.show()
+
+# Plot feature importance
+importance = model.coef_
+features = X.columns
+plt.figure(figsize=(10, 6))
+sns.barplot(x=importance, y=features)
+plt.xlabel('Importance')
+plt.ylabel('Features')
+plt.title('Feature Importance')
+plt.show()
+
+# Plot correlation heatmap
+plt.figure(figsize=(10, 8))
+sns.heatmap(data.corr(), annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Correlation Heatmap')
+plt.show()
+
+# Plot time series of production output
+plt.figure(figsize=(10, 6))
+plt.plot(data.index, data['Production_Output'], label='Production Output')
+plt.xlabel('Time')
+plt.ylabel('Production Output')
+plt.title('Production Output Over Time')
+plt.legend()
+plt.show()
+
+# Plot residuals
+residuals = y_test - y_pred
+plt.figure(figsize=(10, 6))
+plt.scatter(y_pred, residuals, alpha=0.7)
+plt.axhline(y=0, color='r', linestyle='--')
+plt.xlabel('Predicted Production Output')
+plt.ylabel('Residuals')
+plt.title('Residual Plot')
+plt.show()
+
+# Plot distribution of key variables
+plt.figure(figsize=(14, 10))
+plt.subplot(2, 2, 1)
+sns.histplot(data['Production_Output'], kde=True, bins=30)
+plt.title('Distribution of Production Output')
+
+plt.subplot(2, 2, 2)
+sns.histplot(data['Defect_Rate'], kde=True, bins=30)
+plt.title('Distribution of Defect Rate')
+
+plt.subplot(2, 2, 3)
+sns.histplot(data['Machine_Downtime'], kde=True, bins=30)
+plt.title('Distribution of Machine Downtime')
+
+plt.subplot(2, 2, 4)
+sns.histplot(data['Employee_Training_Hours'], kde=True, bins=30)
+plt.title('Distribution of Employee Training Hours')
+
+plt.tight_layout()
+plt.show()
